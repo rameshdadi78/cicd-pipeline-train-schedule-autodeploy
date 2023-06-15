@@ -88,7 +88,7 @@ pipeline {
         cleanup {
             kubernetesDeploy (
                 kubeconfigId: 'kubeconfig',
-                configs: 'train-schedule-kube-canary.yml', #this will used the global env which the CANARY_REPLICAS is zero
+                configs: 'train-schedule-kube-canary.yml', // this will used the global env which the CANARY_REPLICAS is zero
                 enableConfigSubstitution: true
             )
         }

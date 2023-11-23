@@ -1,5 +1,8 @@
 pipeline {
     agent any
+    environment { 
+        CANARY_REPLICAS = 0
+    }
     stages {
         stage('Build') {
             steps {
@@ -49,24 +52,40 @@ pipeline {
                 )
             }
         }
+        stage('SmokeTest') {
+            when {
+                branch 'master'
+            }
+            steps {
+                script {
+                    def response = httpRequest (
+                        url: "http://$KUBE_MASTER_IP:8081/",
+                        tmeout: 30
+                    )
+                    if (response.status != 200) {
+                        error("Smoke test against canary deployment failed.")
+                    }
+                }
+            }
+        }
         stage('DeployToProduction') {
             when {
                 branch 'master'
             }
-            environment { 
-                CANARY_REPLICAS = 0
-            }
             steps {
-                input 'Deploy to Production?'
                 milestone(1)
                 kubernetesDeploy(
                     kubeconfigId: 'kubeconfig',
-                    configs: 'train-schedule-kube-canary.yml',
+                    configs: 'train-schedule-kube.yml',
                     enableConfigSubstitution: true
                 )
+            }
+        }
+        post {
+            cleanup {
                 kubernetesDeploy(
                     kubeconfigId: 'kubeconfig',
-                    configs: 'train-schedule-kube.yml',
+                    configs: 'train-schedule-kube-canary.yml',
                     enableConfigSubstitution: true
                 )
             }

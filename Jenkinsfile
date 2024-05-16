@@ -3,6 +3,7 @@ pipeline {
     environment {
         //be sure to replace "willbla" with your own Docker Hub username
         DOCKER_IMAGE_NAME = "radsdev1106/train-schedule"
+        CANARY_REPLICAS = 0
     }
     stages {
         stage('Build') {
@@ -73,9 +74,9 @@ pipeline {
         stage('DeployToProduction') {
             when {
                 branch 'master'
-            }           
-            steps {                
-                milestone(1)                
+            }
+            steps {
+                milestone(1)
                 kubernetesDeploy(
                     kubeconfigId: 'kubeconfig',
                     configs: 'train-schedule-kube.yml',
